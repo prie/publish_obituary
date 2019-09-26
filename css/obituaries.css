@@ -1,0 +1,21 @@
+.label-item {
+    font-weight:bold;
+    text-transform:capitalize;
+    margin-top:10px;
+}
+#publish-obituary-approve-form h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    background: #f4f4f4;
+    padding: 10px 0px;
+    font-size: 15px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+#publish-obituary-approve-form > div > h3 {
+    background:none;
+    padding:0px 0px 0px;
+    text-transform:none;
+    font-weight:normal;
+    font-size:1.5em;
+}

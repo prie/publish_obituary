@@ -1,0 +1,175 @@
+<?php
+
+module_load_include('inc', 'publish_obituary', 'includes/publish_obituary.form');
+module_load_include('inc', 'publish_obituary', 'includes/publish_obituary.page');
+module_load_include('inc', 'publish_obituary', 'includes/publish_obituary.navigation');
+module_load_include('inc', 'publish_obituary', 'includes/publish_obituary.validate');
+module_load_include('inc', 'publish_obituary', 'includes/publish_obituary.submit');
+
+
+/**
+ * Implements hook_menu().
+ */
+function publish_obituary_menu() {
+
+  $items = array();
+  $items['online-obituaries/create/%'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('publish_obituary_form', 2),
+    'access arguments' => array('access content'),
+    //'file' => 'includes/publish_obituary.form.inc',
+    'type' => MENU_NORMAL_ITEM,
+    'access callback' => TRUE,
+  );
+
+  $items['online-obituaries/create-complete'] = array(
+    'page callback' => 'publish_obituary_complete',
+    'page arguments' => array(),
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+    'access callback' => TRUE,
+  );
+
+  $items['admin/commerce/orders/obituaries'] = array(
+    'title' => 'Obituaries',
+    'page callback' => 'publish_obituary_orders',
+    'page arguments' => array(),
+    'access arguments' => array('access administration pages'),
+    //'access arguments' => array('access statistics'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+  );
+
+  $items['admin/config/obituaries'] = array(
+    /*
+    'title' => 'Obituaries form',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('publish_obituary_setting_form'),
+    'access arguments' => array('access statistics'),
+    'type' => MENU_LOCAL_TASK,
+    */
+    'title' => 'Obituaries form settings',
+    'page callback' => 'publish_obituary_obituary_form_settings',
+    'page arguments' => array(),
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/config/obituaries/death_announcement'] = array(
+    'title' => 'Death Announcement',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/config/obituaries/memoriam'] = array(
+    'title' => 'In Memoriam',
+    'page callback' => 'publish_obituary_memoriam_form_settings',
+    'page arguments' => array(),
+    'access arguments' => array('access content'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['obituaries-order/%/approve'] = array(
+    //'title' => 'Online Obituaries Order Approve',
+    'page callback' => 'publish_obituary_order_approve',
+    'page arguments' => array(1),
+    'access arguments' => array('access content'),
+    'theme callback' => 'variable_get',
+    'theme arguments' => array('admin_theme'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['obituaries-order/%/delete'] = array(
+    'page callback' => 'publish_obituary_order_delete',
+    'page arguments' => array(1),
+    'access arguments' => array('access content'),
+    'theme callback' => 'variable_get',
+    'theme arguments' => array('admin_theme'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  // path with autocomplete function for obituary
+  $items['obituary/autocomplete'] = array(
+    'title' => 'Autocomplete for obituary',
+    'page callback' => '_obituary_autocomplete',
+    'access arguments' => array('access content'),  //or whatever permission makes sense
+    'type' => MENU_CALLBACK
+  );
+  
+  return $items;
+}
+
+/**
+ * prevent object message error on node_page_title()
+ */
+function publish_obituary_menu_alter(&$items) {
+  $items['node/%node']['title callback'] = 'publish_obituary_page_title';
+}
+
+function publish_obituary_page_title($node) {
+  if (!$node) return '';
+  if (is_numeric($node)) $node = node_load($node);
+
+  return !empty($node->title) ? $node->title : '';
+}
+
+/**
+ * alter specific for date form 
+ */
+function publish_obituary_date_text_process_alter(&$element, &$form_state, $context) {  
+
+  unset($element['date']['#description']);
+  
+  if ($form_state['complete form']['#form_id'] == 'publish_obituary_form') {
+    if ($element['#id'] == 'edit-departed-date') {
+      $element['date']['#attributes']['placeholder'] = 'Departed Date ( ' . date('d F Y') . ' )';
+    }
+
+    if ($element['#id'] == 'edit-pub-date') {
+      $element['date']['#attributes']['placeholder'] = 'Publication Date ( ' . date('d F Y') . ' )';
+    }
+    
+    if ($element['#id'] == 'edit-more-nightserv-0-night-services' || $element['#id'] == 'edit-more-nightserv-1-night-services' || $element['#id'] == 'edit-more-nightserv-2-night-services') {
+      $element['date']['#attributes']['placeholder'] = 'Select Date and Time';
+    }
+
+    if ($element['#id'] == 'edit-cortege-leaves' || $element['#id'] == 'edit-ssa-memorial' || $element['#id'] == 'edit-funeral-service' || $element['#id'] == 'edit-buses-leaves') {
+      $element['date']['#attributes']['placeholder'] = 'Select Date and Time';
+    }
+
+    if ($element['#id'] == 'edit-karumathi-date' || $element['#id'] == 'edit-athma-shanthi-date') {
+      $element['date']['#attributes']['placeholder'] = 'Select Date';
+    }
+
+    if ($element['#id'] == 'edit-departed-on') {
+      $element['date']['#attributes']['placeholder'] = date('d F Y');
+    }
+
+    if ($element['#id'] == 'edit-cortege-leaves-at') {
+      $element['date']['#attributes']['placeholder'] =  date('H:i');
+    }
+
+    if ($element['#id'] == 'edit-cortege-masstime' || $element['#id'] == 'edit-cortege-time' || $element['#id'] == 'edit-athma-shanthi-time') {
+      $element['date']['#attributes']['placeholder'] = 'Select Time';
+    }
+  }
+}
+
+/**
+ * autocomplete helper
+ * $string = string for search
+ */
+function _obituary_autocomplete($string) {
+  $matches = array();
+  $result = db_select('node', 'n');
+  $result->join('field_data_field_cortage_leaves_on', 'c', 'n.nid = c.entity_id');
+  $all_obi = $result->fields('n', array('nid', 'title'))
+            ->condition('n.type', 'obituary', '=')
+            ->condition('n.status', 1, '=')
+            //->condition('c.field_cortage_leaves_on_value', time(), '>')
+            ->condition('n.title', '%' . db_like($string) . '%', 'LIKE')
+            ->execute();
+
+  // save the query to matches
+  foreach ($all_obi as $row) {
+    $matches[$row->title .' ('. $row->nid .')'] = check_plain($row->title);
+  }
+
+  // Return the result to the form in json
+  drupal_json_output($matches);
+}

@@ -1,0 +1,3 @@
+name = Publish an Obituary	
+description = Multistep form for Death Announcement, Acknowledgement, Condolence and In Memoriam
+core = 7.x

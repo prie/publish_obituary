@@ -1,0 +1,107 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the publish_obituary module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function publish_obituary_schema() {
+    $schema['online_obituaries_orders'] = array(
+        'description' => 'Stores the orders of online obituaries.',
+        'fields' => array(
+            'oid' => array(
+                'description' => 'The primary identifier for an order.',
+                'type' => 'serial',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+            ),
+            'uid' => array(
+                'description' => 'The {users}.uid this order is from unless the orderer was anonymous.',
+                'type' => 'int',
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+            'status' => array(
+                'description' => 'Boolean indicating order approve.',
+                'type' => 'int',
+                'length' => 2,
+                'unsigned' => TRUE,
+                'not null' => TRUE,
+                'default' => 0,
+            ),
+            'form_type' => array(
+                'description' => 'Kind of form.',
+                'type' => 'int',
+                'length' => 2,
+                'not null' => TRUE,
+            ),
+            'kind' => array(
+                'description' => 'Kind of advertisement.',
+                'type' => 'int',
+                'length' => 2,
+                'not null' => TRUE,
+            ),
+            'publication' => array(
+                'description' => 'The array of the publication step data',
+                'type' => 'blob', 
+                'size' => 'normal',
+                'not null' => FALSE, 
+            ),
+            'advertiser' => array(
+                'description' => 'The array of the advertiser step data',
+                'type' => 'blob', 
+                'size' => 'normal',
+                'not null' => FALSE, 
+            ),
+            'deceased' => array(
+                'description' => 'The array of the deceased step data',
+                'type' => 'blob', 
+                'size' => 'normal',
+                'not null' => FALSE, 
+            ),
+            'family' => array(
+                'description' => 'The array of the family & friends step data',
+                'type' => 'blob', 
+                'size' => 'normal',
+                'not null' => FALSE, 
+            ),
+            'type_details' => array(
+                'description' => 'The array of the type of form step data',
+                'type' => 'blob', 
+                'size' => 'normal',
+                'not null' => FALSE, 
+            ),
+            'upload' => array(
+                'description' => 'The array of the upload photo $ certificate step data',
+                'type' => 'blob', 
+                'size' => 'normal',
+                'not null' => FALSE, 
+            ),
+            'created' => array(
+                'type' => 'int',
+                'not null' => TRUE,
+                'default' => 0,
+                'description' => 'The timestamp of the order creation.',
+            ),
+        ),
+        'indexes' => array(
+            'order_created' => array('created'),
+        ),
+        'unique keys' => array(
+            'oid' => array('oid')
+        ),
+        'primary key' => array('oid'),
+        'foreign keys' => array(
+            'orderer' => array(
+                'table' => 'users',
+                'columns' => array('uid' => 'uid'),
+            ),
+        ),
+    );
+
+    return $schema;
+}
