@@ -1,6 +1,6 @@
 # Publish Obituary
 
-The Publish Obituary is a Drupal 7 custom module to provide a complicated multi-step form with AJAX and save the data to database
+The Publish Obituary module, a custom Drupal 7 development, facilitates the creation of obituaries through a complex, multi-step form utilizing AJAX for enhanced user experience. The module seamlessly integrates with the database to securely store all relevant information.
 
 ## Screenshot
 ![Publish Obituary](files/Online-Obituaries.png)
